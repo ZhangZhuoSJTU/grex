@@ -115,8 +115,16 @@ impl<'a> Dfa<'a> {
             if current_grapheme.maximum() == grapheme.maximum() - 1 {
                 let min = min(current_grapheme.minimum(), grapheme.minimum());
                 let max = max(current_grapheme.maximum(), grapheme.maximum());
+                let chars = if !grapheme.has_character_class()
+                    && grapheme.chars().len() > 1
+                    && grapheme.chars().iter().any(|part| part.chars().count() > 1)
+                {
+                    vec![grapheme.value()]
+                } else {
+                    grapheme.chars().clone()
+                };
                 let new_grapheme = Grapheme::new(
-                    grapheme.chars().clone(),
+                    chars,
                     min,
                     max,
                     self.config.is_capturing_group_enabled,

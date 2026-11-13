@@ -76,8 +76,31 @@ impl Grapheme {
         self.chars.join("")
     }
 
+    pub(crate) fn from_repeated_unit(
+        chars: Vec<String>,
+        count: u32,
+        is_capturing_group_enabled: bool,
+        is_output_colorized: bool,
+        is_verbose_mode_enabled: bool,
+    ) -> Self {
+        Self::new(
+            chars,
+            count,
+            count,
+            is_capturing_group_enabled,
+            is_output_colorized,
+            is_verbose_mode_enabled,
+        )
+    }
+
     pub(crate) fn chars(&self) -> &Vec<String> {
         &self.chars
+    }
+
+    pub(crate) fn has_character_class(&self) -> bool {
+        self.chars
+            .iter()
+            .any(|part| CHAR_CLASSES.contains(&part.as_str()))
     }
 
     pub(crate) fn chars_mut(&mut self) -> &mut Vec<String> {
@@ -179,7 +202,10 @@ impl Grapheme {
 impl Display for Grapheme {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let is_single_char = self.char_count(false) == 1
-            || (self.chars.len() == 1 && self.chars[0].matches('\\').count() == 1);
+            || (self.chars.len() == 1
+                && self.chars[0].matches('\\').count() == 1
+                && (self.chars[0].chars().count() == 2
+                    || (self.chars[0].starts_with("\\u{") && self.chars[0].ends_with('}'))));
         let is_range = self.min < self.max;
         let is_repetition = self.min > 1;
         let mut value = if self.repetitions.is_empty() {
